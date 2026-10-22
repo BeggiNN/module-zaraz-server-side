@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<!--
+/**
+ * Copyright © Perspective. All rights reserved.
+ */
+-->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework:Event/etc/events.xsd">
+    <event name="controller_action_predispatch_checkout_index_index">
+        <observer name="perspective_zaraz_server_capture_context"
+                  instance="Perspective\ZarazServerSide\Observer\CaptureQuoteContext"/>
+    </event>
+</config>

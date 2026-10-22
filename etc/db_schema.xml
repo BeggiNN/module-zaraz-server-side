@@ -1,0 +1,56 @@
+<?xml version="1.0"?>
+<!--
+/**
+ * Copyright © Perspective. All rights reserved.
+ */
+-->
+<schema xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework:Setup/Declaration/Schema/etc/schema.xsd">
+    <table name="perspective_zaraz_server_event" resource="sales" engine="innodb"
+           comment="Perspective Zaraz server-side events (one row per event and order / credit memo)">
+        <column xsi:type="int" name="event_id" unsigned="true" nullable="false" identity="true" comment="Event ID"/>
+        <column xsi:type="varchar" name="event_code" nullable="false" length="64" comment="Module event code"/>
+        <column xsi:type="varchar" name="reference" nullable="false" length="64"
+                comment="Order / credit memo increment ID, unique per event code"/>
+        <column xsi:type="int" name="order_id" unsigned="true" nullable="false" comment="Order ID"/>
+        <column xsi:type="int" name="source_id" unsigned="true" nullable="true" comment="Credit memo ID"/>
+        <column xsi:type="smallint" name="store_id" unsigned="true" nullable="false" comment="Store ID"/>
+        <column xsi:type="varchar" name="status" nullable="false" length="16" default="pending"
+                comment="pending | delivered (by the browser) | sent | failed | skipped"/>
+        <column xsi:type="smallint" name="attempts" unsigned="true" nullable="false" default="0"
+                comment="Failed send attempts"/>
+        <column xsi:type="timestamp" name="scheduled_at" nullable="false" default="CURRENT_TIMESTAMP"
+                comment="Not sent before"/>
+        <column xsi:type="timestamp" name="sent_at" nullable="true" comment="Sent at"/>
+        <column xsi:type="text" name="last_error" nullable="true" comment="Last error or skip reason"/>
+        <column xsi:type="timestamp" name="created_at" nullable="false" default="CURRENT_TIMESTAMP"
+                comment="Created at"/>
+        <column xsi:type="timestamp" name="updated_at" nullable="false" default="CURRENT_TIMESTAMP"
+                on_update="true" comment="Updated at"/>
+        <constraint xsi:type="primary" referenceId="PRIMARY">
+            <column name="event_id"/>
+        </constraint>
+        <constraint xsi:type="unique" referenceId="PERSPECTIVE_ZARAZ_SERVER_EVENT_EVENT_CODE_REFERENCE">
+            <column name="event_code"/>
+            <column name="reference"/>
+        </constraint>
+        <constraint xsi:type="foreign" referenceId="PERSPECTIVE_ZARAZ_SERVER_EVENT_ORDER_ID_SALES_ORDER_ENTITY_ID"
+                    table="perspective_zaraz_server_event" column="order_id"
+                    referenceTable="sales_order" referenceColumn="entity_id" onDelete="CASCADE"/>
+        <index referenceId="PERSPECTIVE_ZARAZ_SERVER_EVENT_STATUS_SCHEDULED_AT" indexType="btree">
+            <column name="status"/>
+            <column name="scheduled_at"/>
+        </index>
+        <index referenceId="PERSPECTIVE_ZARAZ_SERVER_EVENT_CREATED_AT" indexType="btree">
+            <column name="created_at"/>
+        </index>
+    </table>
+    <table name="quote" resource="checkout">
+        <column xsi:type="text" name="perspective_zaraz_context" nullable="true"
+                comment="Perspective Zaraz client context (cookies, IP, user agent) for server-side events"/>
+    </table>
+    <table name="sales_order" resource="sales">
+        <column xsi:type="text" name="perspective_zaraz_context" nullable="true"
+                comment="Perspective Zaraz client context (cookies, IP, user agent) for server-side events"/>
+    </table>
+</schema>

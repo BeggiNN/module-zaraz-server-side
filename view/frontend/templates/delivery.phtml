@@ -1,0 +1,35 @@
+<?php
+/**
+ * Copyright © Perspective. All rights reserved.
+ */
+declare(strict_types=1);
+
+use Magento\Framework\View\Element\Template;
+use Magento\Framework\View\Helper\SecureHtmlRenderer;
+use Perspective\ZarazServerSide\ViewModel\Delivery;
+
+/** @var Template $block */
+/** @var SecureHtmlRenderer $secureRenderer */
+/** @var Delivery $viewModel */
+$viewModel = $block->getData('view_model');
+$config = $viewModel->getConfigJson();
+if ($config === '') {
+    return;
+}
+?>
+<?= /* @noEscape */ $secureRenderer->renderTag(
+    'script',
+    ['type' => 'application/json', 'id' => 'perspective-zaraz-server-delivery'],
+    $config,
+    false
+) ?>
+<?= /* @noEscape */ $secureRenderer->renderTag(
+    'script',
+    [
+        'src' => $block->getViewFileUrl('Perspective_ZarazServerSide::js/order-delivery.js'),
+        'defer' => 'defer',
+        'data-cfasync' => 'false',
+    ],
+    null,
+    false
+) ?>
