@@ -1,0 +1,38 @@
+{
+    "perspective_zaraz_server_event": {
+        "column": {
+            "event_id": true,
+            "event_code": true,
+            "reference": true,
+            "order_id": true,
+            "source_id": true,
+            "store_id": true,
+            "status": true,
+            "attempts": true,
+            "scheduled_at": true,
+            "sent_at": true,
+            "last_error": true,
+            "created_at": true,
+            "updated_at": true
+        },
+        "index": {
+            "PERSPECTIVE_ZARAZ_SERVER_EVENT_STATUS_SCHEDULED_AT": true,
+            "PERSPECTIVE_ZARAZ_SERVER_EVENT_CREATED_AT": true
+        },
+        "constraint": {
+            "PRIMARY": true,
+            "PERSPECTIVE_ZARAZ_SERVER_EVENT_EVENT_CODE_REFERENCE": true,
+            "PERSPECTIVE_ZARAZ_SERVER_EVENT_ORDER_ID_SALES_ORDER_ENTITY_ID": true
+        }
+    },
+    "quote": {
+        "column": {
+            "perspective_zaraz_context": true
+        }
+    },
+    "sales_order": {
+        "column": {
+            "perspective_zaraz_context": true
+        }
+    }
+}

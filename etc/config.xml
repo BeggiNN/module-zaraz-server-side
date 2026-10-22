@@ -1,0 +1,48 @@
+<?xml version="1.0"?>
+<!--
+/**
+ * Copyright © Perspective. All rights reserved.
+ */
+-->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Store:etc/config.xsd">
+    <default>
+        <perspective_zaraz>
+            <server>
+                <enabled>0</enabled>
+                <transport>zaraz_http</transport>
+                <zaraz_endpoint_path/>
+                <zaraz_endpoint_host/>
+                <ga4_measurement_id/>
+                <ga4_api_secret backend_model="Magento\Config\Model\Config\Backend\Encrypted"/>
+                <ga4_debug>0</ga4_debug>
+                <purchase_delay>20</purchase_delay>
+                <admin_orders>0</admin_orders>
+                <max_attempts>5</max_attempts>
+                <bot_user_agents>bot
+crawl
+spider
+slurp
+headless
+lighthouse
+phantomjs
+puppeteer
+playwright
+python-requests
+go-http-client
+curl/
+wget/</bot_user_agents>
+                <forward_cookies>cfz_
+cfzs_
+cf_zaraz
+_ga
+_fbp
+_fbc
+_ttp
+ttclid</forward_cookies>
+                <retention_days>30</retention_days>
+                <log_payloads>0</log_payloads>
+            </server>
+        </perspective_zaraz>
+    </default>
+</config>

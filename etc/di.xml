@@ -1,0 +1,112 @@
+<?xml version="1.0"?>
+<!--
+/**
+ * Copyright © Perspective. All rights reserved.
+ */
+-->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
+    <preference for="Perspective\ZarazServerSide\Api\Data\ServerEventInterface"
+                type="Perspective\ZarazServerSide\Model\ServerEvent"/>
+    <preference for="Perspective\ZarazServerSide\Api\ServerEventRepositoryInterface"
+                type="Perspective\ZarazServerSide\Model\ServerEventRepository"/>
+    <preference for="Perspective\ZarazServerSide\Api\BrowserDeliveryInterface"
+                type="Perspective\ZarazServerSide\Model\BrowserDelivery"/>
+
+    <!-- Server-only events of the core pool / Events table -->
+    <type name="Perspective\Zaraz\Model\Event\BuilderPool">
+        <arguments>
+            <argument name="builders" xsi:type="array">
+                <item name="order_refunded"
+                      xsi:type="object">Perspective\ZarazServerSide\Model\Event\Builder\OrderRefunded</item>
+                <item name="order_cancelled"
+                      xsi:type="object">Perspective\ZarazServerSide\Model\Event\Builder\OrderCancelled</item>
+            </argument>
+        </arguments>
+    </type>
+    <!-- Channels of an event without a row in the Events table -->
+    <type name="Perspective\Zaraz\Model\Event\Generator">
+        <arguments>
+            <argument name="defaultChannels" xsi:type="array">
+                <item name="order_refunded" xsi:type="array">
+                    <item name="server" xsi:type="string">server</item>
+                </item>
+                <item name="order_cancelled" xsi:type="array"/>
+            </argument>
+        </arguments>
+    </type>
+
+    <type name="Perspective\ZarazServerSide\Model\Transport\TransportPool">
+        <arguments>
+            <argument name="transports" xsi:type="array">
+                <item name="zaraz_http"
+                      xsi:type="object">Perspective\ZarazServerSide\Model\Transport\ZarazHttpEvents</item>
+                <item name="ga4_mp"
+                      xsi:type="object">Perspective\ZarazServerSide\Model\Transport\Ga4MeasurementProtocol</item>
+            </argument>
+        </arguments>
+    </type>
+
+    <!-- var/log/perspective_zaraz_server.log -->
+    <virtualType name="Perspective\ZarazServerSide\Logger\Handler" type="Magento\Framework\Logger\Handler\Base">
+        <arguments>
+            <argument name="fileName" xsi:type="string">/var/log/perspective_zaraz_server.log</argument>
+        </arguments>
+    </virtualType>
+    <virtualType name="Perspective\ZarazServerSide\Logger" type="Magento\Framework\Logger\Monolog">
+        <arguments>
+            <argument name="name" xsi:type="string">perspective_zaraz_server</argument>
+            <argument name="handlers" xsi:type="array">
+                <item name="file" xsi:type="object">Perspective\ZarazServerSide\Logger\Handler</item>
+            </argument>
+        </arguments>
+    </virtualType>
+    <type name="Perspective\ZarazServerSide\Model\Processor">
+        <arguments>
+            <argument name="logger" xsi:type="object">Perspective\ZarazServerSide\Logger</argument>
+        </arguments>
+    </type>
+    <type name="Perspective\ZarazServerSide\Model\Scheduler">
+        <arguments>
+            <argument name="logger" xsi:type="object">Perspective\ZarazServerSide\Logger</argument>
+        </arguments>
+    </type>
+    <type name="Perspective\ZarazServerSide\Model\Transport\ZarazHttpEvents">
+        <arguments>
+            <argument name="logger" xsi:type="object">Perspective\ZarazServerSide\Logger</argument>
+        </arguments>
+    </type>
+    <type name="Perspective\ZarazServerSide\Model\Transport\Ga4MeasurementProtocol">
+        <arguments>
+            <argument name="logger" xsi:type="object">Perspective\ZarazServerSide\Logger</argument>
+        </arguments>
+    </type>
+    <type name="Perspective\ZarazServerSide\Observer\CaptureQuoteContext">
+        <arguments>
+            <argument name="checkoutSession" xsi:type="object">Magento\Checkout\Model\Session\Proxy</argument>
+            <argument name="logger" xsi:type="object">Perspective\ZarazServerSide\Logger</argument>
+        </arguments>
+    </type>
+    <type name="Perspective\ZarazServerSide\Model\SuccessOrders">
+        <arguments>
+            <argument name="checkoutSession" xsi:type="object">Magento\Checkout\Model\Session\Proxy</argument>
+        </arguments>
+    </type>
+
+    <!-- Console commands are instantiated by setup:install: no heavy dependencies before execute() -->
+    <type name="Perspective\ZarazServerSide\Console\Command\ProcessCommand">
+        <arguments>
+            <argument name="processor" xsi:type="object">Perspective\ZarazServerSide\Model\Processor\Proxy</argument>
+        </arguments>
+    </type>
+    <type name="Magento\Framework\Console\CommandListInterface">
+        <arguments>
+            <argument name="commands" xsi:type="array">
+                <item name="perspective_zaraz_server_process"
+                      xsi:type="object">Perspective\ZarazServerSide\Console\Command\ProcessCommand\Proxy</item>
+                <item name="perspective_zaraz_server_list"
+                      xsi:type="object">Perspective\ZarazServerSide\Console\Command\ListCommand\Proxy</item>
+            </argument>
+        </arguments>
+    </type>
+</config>

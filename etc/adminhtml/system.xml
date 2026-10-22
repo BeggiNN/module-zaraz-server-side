@@ -1,0 +1,268 @@
+<?xml version="1.0"?>
+<!--
+/**
+ * Copyright © Perspective. All rights reserved.
+ */
+-->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Config:etc/system_file.xsd">
+    <system>
+        <section id="perspective_zaraz">
+            <group id="server"
+                   translate="label comment"
+                   sortOrder="200"
+                   showInDefault="1"
+                   showInWebsite="1"
+                   showInStore="1">
+                <label>Server-side Events</label>
+                <comment><![CDATA[
+                    Sent by cron (<code>perspective_zaraz_server_send</code>, every minute):
+                    <b>Order Completed</b> as a fallback — only when the success page did not deliver it to Zaraz
+                    (customer left on the payment page, closed the tab, ad blocker) — and <b>Order Refunded</b> for
+                    credit memos (no browser at all). Which events are sent is set by <b>Events → From server</b>.
+                    Views / cart events are browser-only on purpose: server copies have no session / referrer / UTM
+                    and duplicate the browser events. Log: <code>var/log/perspective_zaraz_server.log</code>,
+                    CLI: <code>bin/magento perspective:zaraz:server:list|process</code>.
+                ]]></comment>
+                <field id="enabled"
+                       translate="label"
+                       type="select"
+                       sortOrder="10"
+                       showInDefault="1"
+                       showInWebsite="1"
+                       showInStore="1"
+                       canRestore="1">
+                    <label>Enable Server-side Events</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                </field>
+                <field id="transport"
+                       translate="label comment"
+                       type="select"
+                       sortOrder="20"
+                       showInDefault="1"
+                       showInWebsite="1"
+                       showInStore="1"
+                       canRestore="1">
+                    <label>Transport</label>
+                    <comment><![CDATA[
+                        <b>Zaraz HTTP Events API</b>: one request, Zaraz forwards the event to every tool like a browser
+                        event (GA4 purchase, Meta Purchase, TikTok CompletePayment); the Zaraz tool cookies of the
+                        customer are passed, so it is the same user. Each event counts as a Zaraz event.
+                        <b>GA4 Measurement Protocol</b>: directly to GA4 only (client id from the Zaraz GA4 cookie).
+                    ]]></comment>
+                    <source_model>Perspective\ZarazServerSide\Model\Config\Source\Transport</source_model>
+                    <depends>
+                        <field id="enabled">1</field>
+                    </depends>
+                </field>
+                <field id="zaraz_endpoint_path"
+                       translate="label comment"
+                       type="text"
+                       sortOrder="30"
+                       showInDefault="1"
+                       showInWebsite="1"
+                       showInStore="1"
+                       canRestore="1">
+                    <label>HTTP Events API Path</label>
+                    <comment><![CDATA[
+                        Exactly as in Zaraz → Settings → Endpoints → HTTP Events API, e.g. <code>/zaraz/api-x7k2q</code> (any hard-to-guess path).
+                        The API has no authentication: use a path that is hard to guess. Cloudflare Access / WAF /
+                        Bot Fight Mode must not block server requests to this path (Access: a Bypass application).
+                    ]]></comment>
+                    <depends>
+                        <field id="enabled">1</field>
+                        <field id="transport">zaraz_http</field>
+                    </depends>
+                </field>
+                <field id="zaraz_endpoint_host"
+                       translate="label comment"
+                       type="text"
+                       sortOrder="40"
+                       showInDefault="1"
+                       showInWebsite="1"
+                       showInStore="1"
+                       canRestore="1">
+                    <label>HTTP Events API Host</label>
+                    <comment><![CDATA[
+                        Empty = host of the store secure base URL. Set when Zaraz runs on another hostname of the zone,
+                        e.g. <code>www.example.com</code>.
+                    ]]></comment>
+                    <depends>
+                        <field id="enabled">1</field>
+                        <field id="transport">zaraz_http</field>
+                    </depends>
+                </field>
+                <field id="ga4_measurement_id"
+                       translate="label"
+                       type="text"
+                       sortOrder="50"
+                       showInDefault="1"
+                       showInWebsite="1"
+                       showInStore="1"
+                       canRestore="1">
+                    <label>GA4 Measurement ID</label>
+                    <comment>G-XXXXXXXXXX, the same stream as the Zaraz GA4 tool.</comment>
+                    <depends>
+                        <field id="enabled">1</field>
+                        <field id="transport">ga4_mp</field>
+                    </depends>
+                </field>
+                <field id="ga4_api_secret"
+                       translate="label comment"
+                       type="obscure"
+                       sortOrder="60"
+                       showInDefault="1"
+                       showInWebsite="1"
+                       showInStore="1">
+                    <label>GA4 Measurement Protocol API Secret</label>
+                    <comment>GA4 → Admin → Data streams → stream → Measurement Protocol API secrets.</comment>
+                    <backend_model>Magento\Config\Model\Config\Backend\Encrypted</backend_model>
+                    <depends>
+                        <field id="enabled">1</field>
+                        <field id="transport">ga4_mp</field>
+                    </depends>
+                </field>
+                <field id="ga4_debug"
+                       translate="label comment"
+                       type="select"
+                       sortOrder="70"
+                       showInDefault="1"
+                       showInWebsite="1"
+                       showInStore="1"
+                       canRestore="1">
+                    <label>GA4 Validation Mode</label>
+                    <comment><![CDATA[
+                        Sends to <code>/debug/mp/collect</code>: GA4 validates the event and records nothing; the event
+                        is still marked as sent. For setup only.
+                    ]]></comment>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <depends>
+                        <field id="enabled">1</field>
+                        <field id="transport">ga4_mp</field>
+                    </depends>
+                </field>
+                <field id="purchase_delay"
+                       translate="label comment"
+                       type="text"
+                       sortOrder="80"
+                       showInDefault="1"
+                       showInWebsite="1"
+                       showInStore="1"
+                       canRestore="1">
+                    <label>Purchase Fallback Delay, Minutes</label>
+                    <comment><![CDATA[
+                        How long the server waits for the success page to report that the browser delivered Order
+                        Completed. A payment page (PayPal, 3-D Secure) may keep the customer away for a while: a too
+                        short delay sends the purchase twice (GA4 drops the duplicate by transaction_id, Meta / TikTok
+                        may not). Ignored when Order Completed is off for the browser in "Events" (sent at once).
+                    ]]></comment>
+                    <validate>validate-zero-or-greater validate-digits</validate>
+                    <depends>
+                        <field id="enabled">1</field>
+                    </depends>
+                </field>
+                <field id="admin_orders"
+                       translate="label comment"
+                       type="select"
+                       sortOrder="90"
+                       showInDefault="1"
+                       showInWebsite="1"
+                       showInStore="1"
+                       canRestore="1">
+                    <label>Send Orders Created in Admin</label>
+                    <comment><![CDATA[
+                        Phone / manual orders as Order Completed from the server (without the customer's cookies).
+                    ]]></comment>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <depends>
+                        <field id="enabled">1</field>
+                    </depends>
+                </field>
+                <field id="max_attempts"
+                       translate="label comment"
+                       type="text"
+                       sortOrder="100"
+                       showInDefault="1"
+                       showInWebsite="1"
+                       showInStore="1"
+                       canRestore="1">
+                    <label>Max Attempts</label>
+                    <comment><![CDATA[
+                        Retries after 5, 10, 20, 40… minutes (up to 6 hours), then the event is marked failed.
+                    ]]></comment>
+                    <validate>validate-greater-than-zero validate-digits</validate>
+                    <depends>
+                        <field id="enabled">1</field>
+                    </depends>
+                </field>
+                <field id="bot_user_agents"
+                       translate="label comment"
+                       type="textarea"
+                       sortOrder="110"
+                       showInDefault="1"
+                       showInWebsite="1"
+                       showInStore="1"
+                       canRestore="1">
+                    <label>Bot User Agents</label>
+                    <comment><![CDATA[
+                        One fragment per line, case-insensitive. Orders placed by a matching user agent are not sent:
+                        the HTTP Events API ignores Cloudflare bot detection.
+                    ]]></comment>
+                    <depends>
+                        <field id="enabled">1</field>
+                    </depends>
+                </field>
+                <field id="forward_cookies"
+                       translate="label comment"
+                       type="textarea"
+                       sortOrder="120"
+                       showInDefault="1"
+                       showInWebsite="1"
+                       showInStore="1"
+                       canRestore="1">
+                    <label>Forwarded Cookies</label>
+                    <comment><![CDATA[
+                        Cookie name prefixes stored with the order and passed as <code>system.cookies</code>:
+                        <code>cfz_</code> / <code>cfzs_</code> are the Zaraz tool storages (GA4 client and session ids).
+                        Stored on quote / order until "Keep Data" days pass.
+                    ]]></comment>
+                    <depends>
+                        <field id="enabled">1</field>
+                    </depends>
+                </field>
+                <field id="retention_days"
+                       translate="label comment"
+                       type="text"
+                       sortOrder="130"
+                       showInDefault="1"
+                       canRestore="1">
+                    <label>Keep Data, Days</label>
+                    <comment><![CDATA[
+                        Processed events and the stored client context (IP, user agent, cookies) are deleted afterwards.
+                    ]]></comment>
+                    <validate>validate-greater-than-zero validate-digits</validate>
+                    <depends>
+                        <field id="enabled">1</field>
+                    </depends>
+                </field>
+                <field id="log_payloads"
+                       translate="label"
+                       type="select"
+                       sortOrder="140"
+                       showInDefault="1"
+                       showInWebsite="1"
+                       showInStore="1"
+                       canRestore="1">
+                    <label>Log Request Bodies</label>
+                    <comment><![CDATA[
+                        Writes request / response bodies (incl. IP and cookies) to the log. Debugging only.
+                    ]]></comment>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <depends>
+                        <field id="enabled">1</field>
+                    </depends>
+                </field>
+            </group>
+        </section>
+    </system>
+</config>

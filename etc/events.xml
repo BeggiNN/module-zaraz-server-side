@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<!--
+/**
+ * Copyright © Perspective. All rights reserved.
+ */
+-->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework:Event/etc/events.xsd">
+    <event name="sales_model_service_quote_submit_before">
+        <observer name="perspective_zaraz_server_assign_context"
+                  instance="Perspective\ZarazServerSide\Observer\AssignOrderContext"/>
+    </event>
+    <event name="sales_model_service_quote_submit_success">
+        <observer name="perspective_zaraz_server_order_completed"
+                  instance="Perspective\ZarazServerSide\Observer\ScheduleOrderCompleted"/>
+    </event>
+    <event name="sales_order_creditmemo_save_after">
+        <observer name="perspective_zaraz_server_order_refunded"
+                  instance="Perspective\ZarazServerSide\Observer\ScheduleOrderRefunded"/>
+    </event>
+    <event name="order_cancel_after">
+        <observer name="perspective_zaraz_server_order_cancelled"
+                  instance="Perspective\ZarazServerSide\Observer\ScheduleOrderCancelled"/>
+    </event>
+</config>
